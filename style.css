@@ -72,14 +72,13 @@ body {
 .orbit-jupiter { width: 84%; height: 84%; margin-top: -42%; margin-left: -42%; }
 .orbit-saturn { width: 100%; height: 100%; margin-top: -50%; margin-left: -50%; }
 
-/* The planets rotate along the edge. Orbit radius is 50% relative to self container */
-.planet { transition: transform 0.5s ease-out; }
-.orbit-mercury .planet { left: 100%; width: 4px; height: 4px; }
-.orbit-venus .planet { left: 100%; width: 6px; height: 6px; }
-.orbit-earth .planet { left: 100%; width: 6px; height: 6px; }
-.orbit-mars .planet { left: 100%; width: 5px; height: 5px; }
-.orbit-jupiter .planet { left: 100%; width: 10px; height: 10px; }
-.orbit-saturn .planet { left: 100%; width: 8px; height: 8px; box-shadow: 0 0 0 2px rgba(255, 235, 179, 0.4); }
+/* Planet dot sizes — minimum 10px so they're easy to hover */
+.orbit-mercury .planet { left: 100%; width: 10px; height: 10px; }
+.orbit-venus   .planet { left: 100%; width: 11px; height: 11px; }
+.orbit-earth   .planet { left: 100%; width: 11px; height: 11px; }
+.orbit-mars    .planet { left: 100%; width: 10px; height: 10px; }
+.orbit-jupiter .planet { left: 100%; width: 14px; height: 14px; }
+.orbit-saturn  .planet { left: 100%; width: 12px; height: 12px; box-shadow: 0 0 0 3px rgba(255, 235, 179, 0.35); }
 
 .bg-mercury { background: #B3B3B3; }
 .bg-venus { background: #FFD27D; }
@@ -144,16 +143,9 @@ body {
 }
 .orrery-tooltip.visible { opacity: 1; transform: translateY(0); }
 
-/* Larger click/hover area via padding; visual size unchanged via inner ::after */
-.celestial-body.planet {
-  cursor: pointer;
-  /* Expand the hover hit area without changing the visual dot */
-  padding: 8px;
-  margin: -8px; /* compensate so it doesn't shift layout */
-  background-clip: content-box;
-  transition: transform 0.2s;
-}
-.celestial-body.planet:hover { transform: translate(-50%, -50%) scale(1.8); filter: brightness(1.4); }
+/* Planets — large enough to hover comfortably */
+.celestial-body.planet { cursor: pointer; transition: transform 0.2s, filter 0.2s; }
+.celestial-body.planet:hover { transform: translate(-50%, -50%) scale(1.8); filter: brightness(1.5); }
 .celestial-body.sun { cursor: default; }
 
 /* ── LOCATION CARD ──────────────────────────────────────────── */
