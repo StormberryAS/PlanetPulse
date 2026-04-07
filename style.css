@@ -72,13 +72,28 @@ body {
 .orbit-jupiter { width: 84%; height: 84%; margin-top: -42%; margin-left: -42%; }
 .orbit-saturn { width: 100%; height: 100%; margin-top: -50%; margin-left: -50%; }
 
-/* Planet dot sizes — minimum 10px so they're easy to hover */
-.orbit-mercury .planet { left: 100%; width: 10px; height: 10px; }
-.orbit-venus   .planet { left: 100%; width: 11px; height: 11px; }
-.orbit-earth   .planet { left: 100%; width: 11px; height: 11px; }
-.orbit-mars    .planet { left: 100%; width: 10px; height: 10px; }
+/* Planet dot sizes — all uniform for readability, not dimensional accuracy */
+.orbit-mercury .planet { left: 100%; width: 14px; height: 14px; }
+.orbit-venus   .planet { left: 100%; width: 14px; height: 14px; }
+.orbit-earth   .planet { left: 100%; width: 14px; height: 14px; }
+.orbit-mars    .planet { left: 100%; width: 14px; height: 14px; }
 .orbit-jupiter .planet { left: 100%; width: 14px; height: 14px; }
-.orbit-saturn  .planet { left: 100%; width: 12px; height: 12px; box-shadow: 0 0 0 3px rgba(255, 235, 179, 0.35); }
+.orbit-saturn  .planet { left: 100%; width: 14px; height: 14px; box-shadow: 0 0 0 3px rgba(255, 235, 179, 0.35); }
+
+/* Planet name label — always visible, counter-rotated so text stays upright */
+.planet-label {
+  position: absolute;
+  /* Sits just outside the dot (right of it, no transform overlap) */
+  left: calc(100% + 5px);
+  top: 50%;
+  transform: translateY(-50%) rotate(90deg); /* counter-rotate the -90deg orrery container */
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  pointer-events: none;
+  letter-spacing: 0.03em;
+}
 
 .bg-mercury { background: #B3B3B3; }
 .bg-venus { background: #FFD27D; }
