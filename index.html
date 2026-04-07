@@ -51,18 +51,20 @@
         
         <!-- Interactive 2D Solar System Map -->
         <section class="orrery-card glass-panel fade-in">
+          <!-- Floating tooltip that follows the cursor over planet dots -->
+          <div id="orrery-tooltip" class="orrery-tooltip" aria-hidden="true"></div>
           <div class="orrery-wrapper">
              <div class="orrery-container">
-               <div id="sun" class="celestial-body sun"></div>
-               <div class="orbit orbit-mercury" id="orbit-mercury"><div class="celestial-body planet bg-mercury" title="Mercury"></div></div>
-               <div class="orbit orbit-venus" id="orbit-venus"><div class="celestial-body planet bg-venus" title="Venus"></div></div>
-               <div class="orbit orbit-earth" id="orbit-earth"><div class="celestial-body planet bg-earth" title="Earth"></div></div>
-               <div class="orbit orbit-mars" id="orbit-mars"><div class="celestial-body planet bg-mars" title="Mars"></div></div>
-               <div class="orbit orbit-jupiter" id="orbit-jupiter"><div class="celestial-body planet bg-jupiter" title="Jupiter"></div></div>
-               <div class="orbit orbit-saturn" id="orbit-saturn"><div class="celestial-body planet bg-saturn" title="Saturn"></div></div>
+               <div id="sun" class="celestial-body sun" data-planet="Sun"></div>
+               <div class="orbit orbit-mercury" id="orbit-mercury"><div class="celestial-body planet bg-mercury" data-planet="Mercury"></div></div>
+               <div class="orbit orbit-venus" id="orbit-venus"><div class="celestial-body planet bg-venus" data-planet="Venus"></div></div>
+               <div class="orbit orbit-earth" id="orbit-earth"><div class="celestial-body planet bg-earth" data-planet="Earth"></div></div>
+               <div class="orbit orbit-mars" id="orbit-mars"><div class="celestial-body planet bg-mars" data-planet="Mars"></div></div>
+               <div class="orbit orbit-jupiter" id="orbit-jupiter"><div class="celestial-body planet bg-jupiter" data-planet="Jupiter"></div></div>
+               <div class="orbit orbit-saturn" id="orbit-saturn"><div class="celestial-body planet bg-saturn" data-planet="Saturn"></div></div>
              </div>
           </div>
-          <p class="hero-desc" style="text-align: center; margin-top: 1.5rem;">Heliocentric Orbit Layout (Real-time)</p>
+          <p class="hero-desc" style="text-align: center; margin-top: 1.5rem;">Heliocentric Orbit Layout (Real-time) — hover planets for name</p>
         </section>
 
         <!-- Divider -->
@@ -80,8 +82,19 @@
           <p id="loc-status" class="hero-desc" style="font-size: 0.85rem; margin: 0;">Required to calculate what planets are above your horizon tonight.</p>
         </section>
 
-        <!-- Dynamic Planet Grid -->
+        <!-- Dynamic Planet Grid (8 classical planets) -->
         <section class="planet-grid fade-in" id="planet-grid">
+           <!-- Handled by Javascript -->
+        </section>
+
+        <!-- Dwarf Planet Divider -->
+        <div class="timeline-header">
+          <h3>Dwarf Planets</h3>
+          <p>Ceres, Pluto &amp; Trans-Neptunian Objects</p>
+        </div>
+
+        <!-- Dwarf Planet Grid -->
+        <section class="planet-grid fade-in" id="dwarf-grid">
            <!-- Handled by Javascript -->
         </section>
 

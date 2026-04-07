@@ -26,6 +26,17 @@ const PLANETS = {
   Neptune: { color: '#4B70FF', L0: 304.3487,  L1: 0.00598103,  a: 30.0690,  e: 0.00859, I: 1.770,  omega: 273.187,Omega: 131.784 },
 };
 
+// ── Dwarf planet orbital elements (J2000.0 mean elements) ────
+// These are not shown on the orrery due to their vast distances
+// and high inclinations, but their RA/Dec are computed identically.
+const DWARF_PLANETS = {
+  Ceres:    { color: '#C8B9A2', L0: 291.8,   L1: 0.21408,   a: 2.7675, e: 0.0796, I: 10.59, omega: 72.59,  Omega: 80.33  },
+  Pluto:    { color: '#D4B99A', L0: 238.9,   L1: 0.00397,   a: 39.482, e: 0.2488, I: 17.14, omega: 113.83, Omega: 110.30 },
+  Haumea:   { color: '#E8E0D4', L0: 121.1,   L1: 0.00213,   a: 43.335, e: 0.1887, I: 28.19, omega: 239.51, Omega: 122.17 },
+  Makemake: { color: '#F5EBD7', L0: 29.0,    L1: 0.00186,   a: 45.430, e: 0.1619, I: 28.96, omega: 298.0,  Omega: 79.40  },
+  Eris:     { color: '#ECECEC', L0: 204.0,   L1: 0.00102,   a: 67.864, e: 0.4416, I: 44.04, omega: 151.43, Omega: 35.95  },
+};
+
 const DEG = Math.PI / 180; // degree → radians
 
 /**
@@ -159,6 +170,30 @@ function formatDec(deg) {
 let observerLat = null;
 let observerLon = null;
 
+// ── Orrery Tooltip Logic ──────────────────────────────────────
+const tooltip = document.getElementById('orrery-tooltip');
+const orrerySection = document.querySelector('.orrery-card');
+
+// Listen for mouse entering/leaving any element with data-planet
+orrerySection.addEventListener('mouseover', (e) => {
+  const target = e.target.closest('[data-planet]');
+  if (!target) return;
+  tooltip.textContent = target.dataset.planet;
+  tooltip.classList.add('visible');
+});
+
+orrerySection.addEventListener('mousemove', (e) => {
+  // Position tooltip relative to the orrery section container
+  const rect = orrerySection.getBoundingClientRect();
+  tooltip.style.left = (e.clientX - rect.left + 12) + 'px';
+  tooltip.style.top  = (e.clientY - rect.top  - 28) + 'px';
+});
+
+orrerySection.addEventListener('mouseout', (e) => {
+  if (!e.target.closest('[data-planet]')) return;
+  tooltip.classList.remove('visible');
+});
+
 /**
  * Runs the full orbital calculation pipeline and updates the DOM.
  */
@@ -211,6 +246,39 @@ function compute() {
       <span class="p-status ${visible ? 'p-visible' : 'p-hidden'}">${observerLat !== null ? (visible ? 'Visible' : 'Below horizon') : 'No location'}</span>
     `;
     grid.appendChild(row);
+  });
+
+  // ── Dwarf Planets ─────────────────────────────────────────
+  const dwarfGrid = document.getElementById('dwarf-grid');
+  dwarfGrid.innerHTML = '';
+
+  Object.entries(DWARF_PLANETS).forEach(([name, data]) => {
+    const p  = heliocentricPosition(data, jd);
+    const gc = toRaDec(p.lon, 0, p.r, earth.lon, earth.r);
+
+    let altitudeText = '–';
+    let visible = false;
+    if (observerLat !== null && observerLon !== null) {
+      const { altitude } = toAltAz(gc.ra, gc.dec, observerLat, observerLon, now);
+      altitudeText = altitude.toFixed(1) + '°';
+      visible = altitude > 5;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'planet-row glass-panel';
+    row.innerHTML = `
+      <div class="p-name">
+        <div class="p-dot" style="background:${data.color};box-shadow:0 0 4px ${data.color};opacity:0.8;"></div>
+        ${name}
+      </div>
+      <div class="p-coords">
+        <span>${formatRA(gc.ra)}</span>
+        <span>${formatDec(gc.dec)}</span>
+        ${observerLat !== null ? `<span style="color: var(--accent-light);">Alt ${altitudeText}</span>` : ''}
+      </div>
+      <span class="p-status ${visible ? 'p-visible' : 'p-hidden'}">${observerLat !== null ? (visible ? 'Visible' : 'Below horizon') : 'No location'}</span>
+    `;
+    dwarfGrid.appendChild(row);
   });
 }
 

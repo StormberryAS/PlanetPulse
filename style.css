@@ -32,7 +32,7 @@ body {
 .header-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 70% at 50% 30%, rgba(157,78,221,0.15) 0%, transparent 70%); pointer-events: none; }
 .header-content { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--sp-md); }
 .sun-icon { width: 80px; height: 80px; filter: drop-shadow(0 0 18px rgba(157, 78, 221, 0.5)); }
-.header-text h1 { font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 700; letter-spacing: -0.02em; background: var(--grad-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1; }
+.header-text h1 { font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 700; letter-spacing: -0.02em; background: var(--grad-primary); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1; }
 .tagline { color: var(--text-secondary); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.3rem; line-height: 1.4; }
 
 /* ── PANELS ─────────────────────────────────────────────────── */
@@ -123,6 +123,34 @@ body {
 .footer-social a:hover { color: var(--text-primary); }
 .footer-privacy { color: var(--accent-light); opacity: 0.8; margin-top: 0.5rem; }
 .footer-ai { color: rgba(255,255,255,0.2); font-size: 0.75rem; margin-top: 0.2rem; }
+
+/* ── ORRERY TOOLTIP ─────────────────────────────────────────── */
+.orrery-tooltip {
+  position: absolute;
+  background: rgba(20, 30, 60, 0.95);
+  color: var(--accent-light);
+  border: 1px solid rgba(157, 78, 221, 0.4);
+  border-radius: 6px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  pointer-events: none; /* never blocks mouse events */
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+  z-index: 100;
+}
+.orrery-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Make planet dots larger & cursor-pointer for better hover UX */
+.celestial-body.planet { cursor: pointer; transition: transform 0.2s; }
+.celestial-body.planet:hover { transform: translate(-50%, -50%) scale(2); }
+.celestial-body.sun { cursor: default; }
 
 .fade-in { animation: fadeIn 0.5s ease-out forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
