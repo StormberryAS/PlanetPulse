@@ -1,0 +1,128 @@
+:root {
+  --bg-color: #080c18;
+  --surface: #101830;
+  --surface-hover: #16203c;
+  --text-primary: #f0f4ff;
+  --text-secondary: #a0aec0;
+  --accent-purple: #9d4edd;
+  --accent-light: #e0aaff;
+  --border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(16, 24, 48, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --grad-primary: linear-gradient(135deg, #9d4edd, #e0aaff);
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --r-lg: 1.5rem;  --r-md: 1rem; --r-sm: 0.5rem;
+  --sp-sm: 0.5rem; --sp-md: 1rem; --sp-lg: 1.5rem; --sp-xl: 2.5rem;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans); background-color: var(--bg-color);
+  color: var(--text-primary); line-height: 1.6; min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+
+.main-container { flex: 1; display: flex; justify-content: center; padding: 2rem 1rem; }
+.app-container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: var(--sp-xl); }
+
+/* ── HEADER ─────────────────────────────────────────────────── */
+.site-header { position: relative; border-bottom: 1px solid var(--border); padding: 3rem 1rem 2rem; overflow: hidden; text-align: center; }
+.header-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 70% at 50% 30%, rgba(157,78,221,0.15) 0%, transparent 70%); pointer-events: none; }
+.header-content { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--sp-md); }
+.sun-icon { width: 80px; height: 80px; filter: drop-shadow(0 0 18px rgba(157, 78, 221, 0.5)); }
+.header-text h1 { font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 700; letter-spacing: -0.02em; background: var(--grad-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1; }
+.tagline { color: var(--text-secondary); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.3rem; line-height: 1.4; }
+
+/* ── PANELS ─────────────────────────────────────────────────── */
+.glass-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--r-md); padding: var(--sp-lg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+/* ── ORRERY (2D MAP) ────────────────────────────────────────── */
+.orrery-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  margin-bottom: 1rem;
+}
+.orrery-container {
+  position: absolute;
+  width: 90%; height: 90%;
+  border-radius: 50%;
+  transform: rotate(-90deg); /* align 0 degrees to East or Standard mapping */
+}
+.celestial-body { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; }
+.sun { width: 14px; height: 14px; background: #FFD700; box-shadow: 0 0 12px #FFD700; z-index: 10; }
+
+.orbit {
+  position: absolute; top: 50%; left: 50%;
+  transform-origin: center center;
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 50%;
+}
+.orbit-mercury { width: 25%; height: 25%; margin-top: -12.5%; margin-left: -12.5%; }
+.orbit-venus { width: 38%; height: 38%; margin-top: -19%; margin-left: -19%; }
+.orbit-earth { width: 52%; height: 52%; margin-top: -26%; margin-left: -26%; }
+.orbit-mars { width: 66%; height: 66%; margin-top: -33%; margin-left: -33%; }
+.orbit-jupiter { width: 84%; height: 84%; margin-top: -42%; margin-left: -42%; }
+.orbit-saturn { width: 100%; height: 100%; margin-top: -50%; margin-left: -50%; }
+
+/* The planets rotate along the edge. Orbit radius is 50% relative to self container */
+.planet { transition: transform 0.5s ease-out; }
+.orbit-mercury .planet { left: 100%; width: 4px; height: 4px; }
+.orbit-venus .planet { left: 100%; width: 6px; height: 6px; }
+.orbit-earth .planet { left: 100%; width: 6px; height: 6px; }
+.orbit-mars .planet { left: 100%; width: 5px; height: 5px; }
+.orbit-jupiter .planet { left: 100%; width: 10px; height: 10px; }
+.orbit-saturn .planet { left: 100%; width: 8px; height: 8px; box-shadow: 0 0 0 2px rgba(255, 235, 179, 0.4); }
+
+.bg-mercury { background: #B3B3B3; }
+.bg-venus { background: #FFD27D; }
+.bg-earth { background: #4B90FF; }
+.bg-mars { background: #FF5A36; }
+.bg-jupiter { background: #FF9E6F; }
+.bg-saturn { background: #FFEBB3; }
+
+/* ── GRID & LIST ──────────────────────────────────────────────── */
+.timeline-header { text-align: center; margin-bottom: calc(var(--sp-lg) * -1); }
+.timeline-header h3 { font-size: 1.2rem; margin-bottom: 0.2rem; }
+.timeline-header p { color: var(--text-secondary); font-size: 0.9rem; }
+
+.planet-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-sm); }
+.planet-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.planet-row:last-child { border-bottom: none; }
+.p-name { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 1.1rem; }
+.p-dot { width: 10px; height: 10px; border-radius: 50%; }
+.p-status { font-size: 0.85rem; padding: 0.2rem 0.6rem; border-radius: 99px; font-weight: 600; }
+.p-visible { background: rgba(76, 175, 80, 0.15); color: #81C784; }
+.p-hidden { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
+.p-coords { display: flex; flex-direction: column; text-align: right; font-size: 0.85rem; color: var(--text-secondary); font-family: monospace; }
+.p-coords span { line-height: 1.2; }
+
+/* Button */
+.btn { width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; border-radius: var(--r-sm); outline: none; border: none; font-weight: 600; font-size: 1rem; font-family: var(--font-sans); cursor: pointer; transition: all 0.2s ease; }
+.btn-primary { background: linear-gradient(135deg, var(--accent-purple), var(--accent-light)); color: #000; }
+.btn-primary:active { transform: translateY(0); }
+
+/* ── FOOTER ─────────────────────────────────────────────────── */
+.site-footer { margin-top: auto; border-top: 1px solid var(--border); padding: 3rem 1rem 2rem; }
+.footer-inner { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--sp-lg); align-items: center; text-align: center; }
+.footer-brand { margin-bottom: var(--sp-sm); }
+.footer-logo { font-family: var(--font-sans); font-size: 1.5rem; font-weight: 700; color: var(--text-primary); text-decoration: none; display: inline-block; margin-bottom: 0.5rem; }
+.footer-dot { background: linear-gradient(135deg, #E21E26, #FF4D54); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.footer-tagline { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; }
+.footer-powered { color: var(--text-secondary); font-size: 0.9rem; }
+.footer-bottom { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 0.85rem; }
+.footer-social { display: flex; gap: 1.25rem; margin-bottom: 1rem; }
+.footer-social a { color: var(--text-secondary); transition: color 0.2s; }
+.footer-social a:hover { color: var(--text-primary); }
+.footer-privacy { color: var(--accent-light); opacity: 0.8; margin-top: 0.5rem; }
+.footer-ai { color: rgba(255,255,255,0.2); font-size: 0.75rem; margin-top: 0.2rem; }
+
+.fade-in { animation: fadeIn 0.5s ease-out forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

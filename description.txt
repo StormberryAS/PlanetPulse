@@ -1,0 +1,16 @@
+PlanetPulse – Real‑Time Planetary Positions
+
+Core Functionality:
+- Show current right‑ascension/declination of the planets.
+- Simple 2‑D orbital diagram with smooth CSS transitions.
+- “What’s visible tonight?” filter for the user’s location.
+
+Why it fits:
+- Mirrors the astronomical calculations already used for the Sun and Moon.
+- Broadens the scope of the ecosystem to the entire solar system.
+- Premium dark‑mode glass‑morphism UI.
+
+Potential UI Elements:
+- Interactive 2D planet map.
+- Glass‑morphism info cards for each planet.
+- Visual "horizon" indicator showing what is currently above the horizon.
