@@ -64,6 +64,7 @@ body {
   transform-origin: center center;
   border: 1px dashed rgba(255,255,255,0.1);
   border-radius: 50%;
+  pointer-events: none; /* orbit rings must never intercept mouse — only the planet dots should */
 }
 .orbit-mercury { width: 25%; height: 25%; margin-top: -12.5%; margin-left: -12.5%; }
 .orbit-venus { width: 38%; height: 38%; margin-top: -19%; margin-left: -19%; }
@@ -79,21 +80,6 @@ body {
 .orbit-mars    .planet { left: 100%; width: 14px; height: 14px; }
 .orbit-jupiter .planet { left: 100%; width: 14px; height: 14px; }
 .orbit-saturn  .planet { left: 100%; width: 14px; height: 14px; box-shadow: 0 0 0 3px rgba(255, 235, 179, 0.35); }
-
-/* Planet name label — always visible, counter-rotated so text stays upright */
-.planet-label {
-  position: absolute;
-  /* Sits just outside the dot (right of it, no transform overlap) */
-  left: calc(100% + 5px);
-  top: 50%;
-  transform: translateY(-50%) rotate(90deg); /* counter-rotate the -90deg orrery container */
-  font-size: 0.62rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  pointer-events: none;
-  letter-spacing: 0.03em;
-}
 
 .bg-mercury { background: #B3B3B3; }
 .bg-venus { background: #FFD27D; }
@@ -158,10 +144,10 @@ body {
 }
 .orrery-tooltip.visible { opacity: 1; transform: translateY(0); }
 
-/* Planets — large enough to hover comfortably */
-.celestial-body.planet { cursor: pointer; transition: transform 0.2s, filter 0.2s; }
+/* Planets — pointer-events: auto to override parent orbit's none */
+.celestial-body.planet { cursor: pointer; pointer-events: auto; transition: transform 0.2s, filter 0.2s; }
 .celestial-body.planet:hover { transform: translate(-50%, -50%) scale(1.8); filter: brightness(1.5); }
-.celestial-body.sun { cursor: default; }
+.celestial-body.sun { cursor: default; pointer-events: auto; }
 
 /* ── LOCATION CARD ──────────────────────────────────────────── */
 .tab-group {
