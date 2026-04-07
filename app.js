@@ -282,27 +282,112 @@ function compute() {
   });
 }
 
-// ── Geolocation Button ────────────────────────────────────────
-document.getElementById('btn-locate').addEventListener('click', () => {
-  const statusEl = document.getElementById('loc-status');
-  statusEl.textContent = 'Requesting location…';
+// ── Tab Switcher ──────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // Deactivate all tabs and panels
+    document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+    document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = true; p.classList.remove('active'); });
+    // Activate clicked tab and matching panel
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    const panel = document.getElementById('panel-' + btn.dataset.tab);
+    if (panel) { panel.hidden = false; panel.classList.add('active'); }
+  });
+});
 
-  if (!navigator.geolocation) {
-    statusEl.textContent = 'Geolocation not supported by this browser.';
-    return;
+// ── City Search ───────────────────────────────────────────────
+const citySearchInput  = document.getElementById('city-search');
+const cityDropdown     = document.getElementById('city-dropdown');
+const citySelectedDiv  = document.getElementById('city-selected');
+const citySelectedText = document.getElementById('city-selected-text');
+const cityClearBtn     = document.getElementById('city-clear-btn');
+
+citySearchInput.addEventListener('input', () => {
+  const query = citySearchInput.value.trim().toLowerCase();
+  if (query.length < 2) { cityDropdown.hidden = true; return; }
+  // Filter matching cities (max 10 results for performance)
+  const matches = CITIES.filter(c =>
+    c.name.toLowerCase().includes(query) || c.country.toLowerCase().includes(query)
+  ).slice(0, 10);
+  cityDropdown.innerHTML = '';
+  if (!matches.length) { cityDropdown.hidden = true; return; }
+  matches.forEach(c => {
+    const li = document.createElement('li');
+    li.role = 'option';
+    li.innerHTML = `<span class="city-name">${c.name}</span><span class="city-country">${c.country}</span>`;
+    li.addEventListener('click', () => {
+      observerLat = c.lat;
+      observerLon = c.lon;
+      citySelectedText.textContent = `${c.name}, ${c.country}`;
+      citySelectedDiv.hidden = false;
+      cityDropdown.hidden = true;
+      citySearchInput.value = '';
+      compute();
+    });
+    cityDropdown.appendChild(li);
+  });
+  cityDropdown.hidden = false;
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrapper')) cityDropdown.hidden = true;
+});
+
+cityClearBtn.addEventListener('click', () => {
+  observerLat = null; observerLon = null;
+  citySelectedDiv.hidden = true;
+  citySearchInput.value = '';
+  compute();
+});
+
+// ── GPS Coordinates ───────────────────────────────────────────
+const latInput = document.getElementById('lat-input');
+const lonInput = document.getElementById('lon-input');
+
+function tryApplyGPS() {
+  const lat = parseFloat(latInput.value);
+  const lon = parseFloat(lonInput.value);
+  if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+    observerLat = lat;
+    observerLon = lon;
+    compute();
   }
+}
+latInput.addEventListener('change', tryApplyGPS);
+lonInput.addEventListener('change', tryApplyGPS);
 
+// ── Device Geolocation ────────────────────────────────────────
+const getLocBtn    = document.getElementById('get-location-btn');
+const deviceCoords = document.getElementById('device-coords');
+const errorMsg     = document.getElementById('error-msg');
+
+getLocBtn.addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    errorMsg.textContent = 'Geolocation not supported by this browser.';
+    errorMsg.hidden = false; return;
+  }
+  getLocBtn.textContent = 'Locating…';
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       observerLat = pos.coords.latitude;
       observerLon = pos.coords.longitude;
-      statusEl.textContent = `Location: ${observerLat.toFixed(2)}°, ${observerLon.toFixed(2)}° — Updating…`;
+      deviceCoords.textContent = `${observerLat.toFixed(4)}°, ${observerLon.toFixed(4)}°`;
+      deviceCoords.hidden = false;
+      getLocBtn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" style="width:18px;height:18px"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg> Location Set`;
+      errorMsg.hidden = true;
       compute();
     },
-    () => { statusEl.textContent = 'Location access denied. Showing RA/Dec without altitude.'; }
+    () => {
+      errorMsg.textContent = 'Location access denied.';
+      errorMsg.hidden = false;
+      getLocBtn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" style="width:18px;height:18px"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg> Get My Location`;
+    }
   );
 });
 
 // ── Initial render & periodic refresh (every 60 seconds) ─────
 compute();
 setInterval(compute, 60000);
+

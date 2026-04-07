@@ -135,22 +135,145 @@ body {
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.04em;
-  pointer-events: none; /* never blocks mouse events */
+  pointer-events: none;
   opacity: 0;
   transform: translateY(-4px);
   transition: opacity 0.15s ease, transform 0.15s ease;
   white-space: nowrap;
   z-index: 100;
 }
-.orrery-tooltip.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+.orrery-tooltip.visible { opacity: 1; transform: translateY(0); }
 
-/* Make planet dots larger & cursor-pointer for better hover UX */
-.celestial-body.planet { cursor: pointer; transition: transform 0.2s; }
-.celestial-body.planet:hover { transform: translate(-50%, -50%) scale(2); }
+/* Larger click/hover area via padding; visual size unchanged via inner ::after */
+.celestial-body.planet {
+  cursor: pointer;
+  /* Expand the hover hit area without changing the visual dot */
+  padding: 8px;
+  margin: -8px; /* compensate so it doesn't shift layout */
+  background-clip: content-box;
+  transition: transform 0.2s;
+}
+.celestial-body.planet:hover { transform: translate(-50%, -50%) scale(1.8); filter: brightness(1.4); }
 .celestial-body.sun { cursor: default; }
+
+/* ── LOCATION CARD ──────────────────────────────────────────── */
+.tab-group {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--r-md);
+  padding: 4px;
+  margin-bottom: var(--sp-lg);
+}
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: var(--sp-sm) 4px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.tab svg { width: 14px; height: 14px; flex-shrink: 0; }
+.tab.active {
+  background: linear-gradient(135deg, rgba(157,78,221,0.2), rgba(224,170,255,0.12));
+  color: var(--accent-light);
+  box-shadow: 0 0 12px rgba(157,78,221,0.15);
+}
+.tab:hover:not(.active) { background: rgba(255,255,255,0.06); color: var(--text-primary); }
+
+.tab-panel { animation: fadeIn 0.2s forwards; }
+
+label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+.field-group { margin-bottom: var(--sp-md); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-md); }
+
+.text-input, .search-input {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.text-input:focus, .search-input:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px rgba(157,78,221,0.15);
+}
+.text-input[type="number"]::-webkit-inner-spin-button,
+.text-input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+.search-wrapper { position: relative; }
+.search-icon {
+  position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--text-secondary); pointer-events: none;
+}
+.search-input { padding-left: 2.4rem; }
+
+.dropdown {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: #0e1628;
+  border: 1px solid rgba(157,78,221,0.3);
+  border-radius: var(--r-md);
+  max-height: 220px; overflow-y: auto;
+  z-index: 200; list-style: none;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+  scrollbar-width: thin;
+}
+.dropdown li {
+  padding: 0.55rem 1rem; cursor: pointer; font-size: 0.9rem;
+  display: flex; justify-content: space-between; align-items: center; gap: var(--sp-sm);
+  border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.1s, color 0.1s;
+}
+.dropdown li:last-child { border-bottom: none; }
+.dropdown li:hover, .dropdown li.highlighted { background: rgba(157,78,221,0.12); color: var(--accent-light); }
+.dropdown li .city-name { font-weight: 500; }
+.dropdown li .city-country { font-size: 0.75rem; color: var(--text-secondary); }
+
+.selected-city {
+  display: flex; align-items: center; gap: var(--sp-sm);
+  background: rgba(157,78,221,0.08); border: 1px solid rgba(157,78,221,0.25);
+  border-radius: var(--r-sm); padding: var(--sp-sm) var(--sp-md);
+  font-size: 0.88rem; color: var(--accent-light); margin-top: var(--sp-sm);
+}
+.clear-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem; line-height: 1; padding: 0 4px; margin-left: auto; transition: color 0.2s; }
+.clear-btn:hover { color: #FF5A5A; }
+
+.city-missing-note { font-size: 0.75rem; color: var(--text-secondary); opacity: 0.7; margin-top: 4px; text-align: right; }
+.city-missing-note a { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+
+.device-panel { display: flex; flex-direction: column; align-items: center; gap: var(--sp-md); padding: var(--sp-md) 0; }
+.device-hint { color: var(--text-secondary); font-size: 0.88rem; text-align: center; }
+.device-coords { font-family: monospace; font-size: 0.85rem; color: var(--accent-light); text-align: center; background: rgba(157,78,221,0.08); border: 1px solid rgba(157,78,221,0.2); border-radius: var(--r-sm); padding: var(--sp-sm) var(--sp-md); width: 100%; margin-top: var(--sp-sm); }
+
+.btn-secondary { background: rgba(255,255,255,0.07); border: 1px solid var(--border); color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; justify-content: center; padding: 0.75rem 1.25rem; border-radius: var(--r-sm); font-family: var(--font-sans); font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; }
+.btn-secondary:hover { background: rgba(255,255,255,0.12); }
+.btn-secondary svg { width: 18px; height: 18px; }
+
+.error-msg { color: #FF5A5A; font-size: 0.85rem; text-align: center; padding-top: var(--sp-sm); }
 
 .fade-in { animation: fadeIn 0.5s ease-out forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
