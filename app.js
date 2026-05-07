@@ -170,6 +170,24 @@ function formatDec(deg) {
 let observerLat = null;
 let observerLon = null;
 
+const dateInput = document.getElementById('date-input');
+const timeInput = document.getElementById('time-input');
+
+function initDateTime() {
+  const now = new Date();
+  if (dateInput) dateInput.value = now.toISOString().split('T')[0];
+  if (timeInput) timeInput.value = now.toTimeString().split(' ')[0].slice(0, 5);
+}
+
+function getSelectedDate() {
+  if (dateInput && timeInput && dateInput.value && timeInput.value) {
+    return new Date(`${dateInput.value}T${timeInput.value}`);
+  }
+  return new Date();
+}
+
+initDateTime();
+
 // ── Orrery Tooltip Logic ──────────────────────────────────────
 const tooltip = document.getElementById('orrery-tooltip');
 const orrerySection = document.querySelector('.orrery-card');
@@ -198,7 +216,7 @@ orrerySection.addEventListener('mouseout', (e) => {
  * Runs the full orbital calculation pipeline and updates the DOM.
  */
 function compute() {
-  const now = new Date();
+  const now = getSelectedDate();
   const jd  = julianDate(now);
 
   // Earth's heliocentric position first
@@ -323,7 +341,7 @@ citySearchInput.addEventListener('input', () => {
       citySelectedDiv.hidden = false;
       cityDropdown.hidden = true;
       citySearchInput.value = '';
-      compute();
+      // Wait for user to press compute manually
     });
     cityDropdown.appendChild(li);
   });
@@ -339,7 +357,7 @@ cityClearBtn.addEventListener('click', () => {
   observerLat = null; observerLon = null;
   citySelectedDiv.hidden = true;
   citySearchInput.value = '';
-  compute();
+  // Wait for user to press compute manually
 });
 
 // ── GPS Coordinates ───────────────────────────────────────────
@@ -352,7 +370,7 @@ function tryApplyGPS() {
   if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
     observerLat = lat;
     observerLon = lon;
-    compute();
+    // Wait for user to press compute manually
   }
 }
 latInput.addEventListener('change', tryApplyGPS);
@@ -377,7 +395,7 @@ getLocBtn.addEventListener('click', () => {
       deviceCoords.hidden = false;
       getLocBtn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" style="width:18px;height:18px"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg> Location Set`;
       errorMsg.hidden = true;
-      compute();
+      // Wait for user to press compute manually
     },
     () => {
       errorMsg.textContent = 'Location access denied.';
@@ -387,7 +405,12 @@ getLocBtn.addEventListener('click', () => {
   );
 });
 
-// ── Initial render & periodic refresh (every 60 seconds) ─────
+// ── Compute Button Event Listener ────────────────────────────
+const btnCompute = document.getElementById('btn-compute');
+if (btnCompute) {
+  btnCompute.addEventListener('click', compute);
+}
+
+// ── Initial render ───────────────────────────────────────────
 compute();
-setInterval(compute, 60000);
 
