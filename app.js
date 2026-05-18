@@ -1,6 +1,6 @@
 /**
  * PlanetPulse — Keplerian Orbital Mechanics Engine
- * Stormberry A.S. | Sovereign, offline-first planetary tracker
+ * Stormberry AS | Sovereign, offline-first planetary tracker
  *
  * Uses simplified VSOP-87 mean orbital elements (J2000 epoch) to compute
  * heliocentric ecliptic coordinates, then converts to geocentric RA/Dec.
