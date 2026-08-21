@@ -325,9 +325,17 @@ citySearchInput.addEventListener('input', () => {
   const query = citySearchInput.value.trim().toLowerCase();
   if (query.length < 2) { cityDropdown.hidden = true; return; }
   // Filter matching cities (max 10 results for performance)
-  const matches = CITIES.filter(c =>
-    c.name.toLowerCase().includes(query) || c.country.toLowerCase().includes(query)
-  ).slice(0, 10);
+  const qf = foldQuery(query);
+  // Prefix matches first. With 25,000 cities a bare substring filter
+  // buries the obvious answer: "erdal" returned Cloverdale, South
+  // Riverdale and Terdal ahead of Erdal, and with only 10 rows shown the
+  // city being typed could fall off the list entirely.
+  const startsWith = [], contains = [];
+  for (const c of CITIES) {
+    if (c.fold.startsWith(qf)) startsWith.push(c);
+    else if (c.fold.includes(qf) || c.cfold.includes(qf)) contains.push(c);
+  }
+  const matches = startsWith.concat(contains).slice(0, 10);
   cityDropdown.innerHTML = '';
   if (!matches.length) { cityDropdown.hidden = true; return; }
   matches.forEach(c => {
