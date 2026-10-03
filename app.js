@@ -1,43 +1,65 @@
 /**
- * PlanetPulse — Keplerian Orbital Mechanics Engine
+ * PlanetPulse: where the planets are, computed in the browser
  * Stormberry AS | Sovereign, offline-first planetary tracker
  *
- * Uses simplified VSOP-87 mean orbital elements (J2000 epoch) to compute
- * heliocentric ecliptic coordinates, then converts to geocentric RA/Dec.
- * Accuracy: ~1° — excellent for observing and visibility purposes.
+ * Planets: Keplerian elements and their rates per century from
+ * E. M. Standish and J. G. Williams (JPL), "Keplerian Elements for
+ * Approximate Positions of the Major Planets", Table 1, referred to the
+ * mean ecliptic and equinox of J2000 and valid from 1800 to 2050
+ * (https://ssd.jpl.nasa.gov/planets/approx_pos.html).
+ *
+ * For each body: mean anomaly M = L minus the longitude of perihelion,
+ * Kepler's equation solved for the eccentric anomaly, the orbit rotated
+ * into the ecliptic by its argument of perihelion, inclination and
+ * ascending node, then made geocentric (with light-time) and equatorial.
+ * Altitude uses those J2000 coordinates precessed to the date.
+ *
+ * Checked on 2026-10-02 against PyEphem (VSOP87) for 2020 to 2032 and
+ * against JPL Horizons for the dwarf planets: see README for the figures.
  */
 
 // ── Set current year in footer ───────────────────────────────
 document.getElementById('current-year').textContent = new Date().getFullYear();
 
-// ── Orbital element constants (J2000.0 mean elements) ────────
-// Each array: [L0, L1, a, e, I, omega, Omega]
-// L0 = mean longitude at J2000 (deg), L1 = daily motion (deg/day)
-// a = semi-major axis (AU), e = eccentricity, I = inclination (deg)
-// omega = arg of perihelion (deg), Omega = long of ascending node (deg)
+// ── Planet elements (Standish Table 1, J2000, 1800 to 2050) ──
+// Each pair is [value at J2000.0, change per Julian century].
+// a = semi-major axis (au), e = eccentricity, I = inclination (deg),
+// L = mean longitude (deg), peri = longitude of perihelion (deg),
+// node = longitude of the ascending node (deg).
+// Earth is the Earth-Moon barycentre, as in the source table.
 const PLANETS = {
-  Mercury: { color: '#B3B3B3', L0: 252.2509,  L1: 4.09233445,  a: 0.38710,  e: 0.20563, I: 7.005,  omega: 29.125, Omega: 48.331  },
-  Venus:   { color: '#FFD27D', L0: 181.9798,  L1: 1.60213034,  a: 0.72333,  e: 0.00677, I: 3.395,  omega: 54.884, Omega: 76.680  },
-  Earth:   { color: '#4B90FF', L0: 100.4643,  L1: 0.98560912,  a: 1.00000,  e: 0.01671, I: 0.0,    omega: 102.937,Omega: 0.0     },
-  Mars:    { color: '#FF5A36', L0: 355.4330,  L1: 0.52402068,  a: 1.52366,  e: 0.09341, I: 1.850,  omega: 286.502,Omega: 49.579  },
-  Jupiter: { color: '#FF9E6F', L0: 34.3515,   L1: 0.08308676,  a: 5.20336,  e: 0.04839, I: 1.303,  omega: 273.867,Omega: 100.464 },
-  Saturn:  { color: '#FFEBB3', L0: 50.0774,   L1: 0.03344422,  a: 9.53707,  e: 0.05386, I: 2.489,  omega: 339.391,Omega: 113.714 },
-  Uranus:  { color: '#7DE8E8', L0: 314.0550,  L1: 0.01172439,  a: 19.1913,  e: 0.04726, I: 0.773,  omega: 96.998, Omega: 74.006  },
-  Neptune: { color: '#4B70FF', L0: 304.3487,  L1: 0.00598103,  a: 30.0690,  e: 0.00859, I: 1.770,  omega: 273.187,Omega: 131.784 },
+  Mercury: { color: '#B3B3B3', a: [0.38709927, 0.00000037], e: [0.20563593, 0.00001906], I: [7.00497902, -0.00594749], L: [252.25032350, 149472.67411175], peri: [77.45779628, 0.16047689], node: [48.33076593, -0.12534081] },
+  Venus:   { color: '#FFD27D', a: [0.72333566, 0.00000390], e: [0.00677672, -0.00004107], I: [3.39467605, -0.00078890], L: [181.97909950, 58517.81538729], peri: [131.60246718, 0.00268329], node: [76.67984255, -0.27769418] },
+  Earth:   { color: '#4B90FF', a: [1.00000261, 0.00000562], e: [0.01671123, -0.00004392], I: [-0.00001531, -0.01294668], L: [100.46457166, 35999.37244981], peri: [102.93768193, 0.32327364], node: [0.0, 0.0] },
+  Mars:    { color: '#FF5A36', a: [1.52371034, 0.00001847], e: [0.09339410, 0.00007882], I: [1.84969142, -0.00813131], L: [-4.55343205, 19140.30268499], peri: [-23.94362959, 0.44441088], node: [49.55953891, -0.29257343] },
+  Jupiter: { color: '#FF9E6F', a: [5.20288700, -0.00011607], e: [0.04838624, -0.00013253], I: [1.30439695, -0.00183714], L: [34.39644051, 3034.74612775], peri: [14.72847983, 0.21252668], node: [100.47390909, 0.20469106] },
+  Saturn:  { color: '#FFEBB3', a: [9.53667594, -0.00125060], e: [0.05386179, -0.00050991], I: [2.48599187, 0.00193609], L: [49.95424423, 1222.49362201], peri: [92.59887831, -0.41897216], node: [113.66242448, -0.28867794] },
+  Uranus:  { color: '#7DE8E8', a: [19.18916464, -0.00196176], e: [0.04725744, -0.00004397], I: [0.77263783, -0.00242939], L: [313.23810451, 428.48202785], peri: [170.95427630, 0.40805281], node: [74.01692503, 0.04240589] },
+  Neptune: { color: '#4B70FF', a: [30.06992276, 0.00026291], e: [0.00859048, 0.00005105], I: [1.77004347, 0.00035372], L: [-55.12002969, 218.45945325], peri: [44.96476227, -0.32241464], node: [131.78422574, -0.00508664] },
 };
 
-// ── Dwarf planet orbital elements (J2000.0 mean elements) ────
-// These are not shown on the orrery due to their vast distances
-// and high inclinations, but their RA/Dec are computed identically.
+// ── Dwarf planet elements ─────────────────────────────────────
+// Heliocentric osculating elements from JPL Horizons (DE441 with SB441-N16
+// perturbers), ecliptic and mean equinox of J2000, epoch 2028-Jan-01.0 TDB
+// (JD 2461771.5), fetched 2026-10-02. a (au), e, I, Omega = ascending node,
+// w = argument of perihelion, M0 = mean anomaly at the epoch (deg),
+// n = mean motion (deg/day). A fixed ellipse drifts as the planets pull on
+// it, so each body is only shown inside the years where it stayed within
+// 1 degree of Horizons: Ceres, close to Jupiter, for 2017 to 2036; the
+// others for 1950 to 2099 (largest error in that span 0.48 degrees, Pluto).
+const DWARF_EPOCH = 2461771.5;
 const DWARF_PLANETS = {
-  Ceres:    { color: '#C8B9A2', L0: 291.8,   L1: 0.21408,   a: 2.7675, e: 0.0796, I: 10.59, omega: 72.59,  Omega: 80.33  },
-  Pluto:    { color: '#D4B99A', L0: 238.9,   L1: 0.00397,   a: 39.482, e: 0.2488, I: 17.14, omega: 113.83, Omega: 110.30 },
-  Haumea:   { color: '#E8E0D4', L0: 121.1,   L1: 0.00213,   a: 43.335, e: 0.1887, I: 28.19, omega: 239.51, Omega: 122.17 },
-  Makemake: { color: '#F5EBD7', L0: 29.0,    L1: 0.00186,   a: 45.430, e: 0.1619, I: 28.96, omega: 298.0,  Omega: 79.40  },
-  Eris:     { color: '#ECECEC', L0: 204.0,   L1: 0.00102,   a: 67.864, e: 0.4416, I: 44.04, omega: 151.43, Omega: 35.95  },
+  Ceres:    { color: '#C8B9A2', years: [2017, 2036], a: 2.766832788966856, e: 0.07994741439834002, I: 10.58259682199891, Omega: 80.18775535660217, w: 72.53838139835237, M0: 37.46203412137074, n: 0.2141557321275452 },
+  Pluto:    { color: '#D4B99A', years: [1950, 2099], a: 39.64360256546674, e: 0.2526802441705023, I: 17.37118531588926, Omega: 110.5323872561754, w: 113.9314077310577, M0: 54.78954246972154, n: 0.003948611489830684 },
+  Haumea:   { color: '#E8E0D4', years: [1950, 2099], a: 43.20023613639894, e: 0.1917277535820945, I: 28.20785252932527, Omega: 121.8223661964471, w: 239.9187199985739, M0: 225.989383859187, n: 0.003471162080311415 },
+  Makemake: { color: '#F5EBD7', years: [1950, 2099], a: 45.68179903084681, e: 0.1559331537367756, I: 29.00898148015426, Omega: 79.39971933951159, w: 296.7369188191528, M0: 172.1708004338928, n: 0.003192193989918451 },
+  Eris:     { color: '#ECECEC', years: [1950, 2099], a: 67.78782786482374, e: 0.4405814704591751, I: 44.06492043811949, Omega: 35.95130764318868, w: 151.0614175355851, M0: 212.4199109342568, n: 0.001765942249194759 },
 };
 
 const DEG = Math.PI / 180; // degree → radians
+const J2000 = 2451545.0;
+const OBLIQUITY_J2000 = 23.4392911 * DEG;
+const LIGHT_DAYS_PER_AU = 0.0057755183;
 
 /**
  * Returns Julian Date for a given JS Date object.
@@ -54,69 +76,106 @@ function norm360(a) {
 }
 
 /**
- * Computes heliocentric ecliptic longitude (deg) and radius (AU)
- * for a planet using simplified Keplerian elements.
+ * Solves Kepler's equation E - e sin E = M (radians) by Newton's method.
  */
-function heliocentricPosition(planet, jd) {
-  const T = jd - 2451545.0; // days from J2000
-
-  // Mean longitude
-  const L = norm360(planet.L0 + planet.L1 * T);
-  // Mean anomaly
-  const M = norm360(L - planet.omega) * DEG;
-
-  // Eccentric anomaly via 2-step Newton iteration (fast, very accurate)
-  let E = M + planet.e * Math.sin(M) * (1 + planet.e * Math.cos(M));
-  E = E - (E - planet.e * Math.sin(E) - M) / (1 - planet.e * Math.cos(E));
-
-  // True anomaly
-  const xv = planet.a * (Math.cos(E) - planet.e);
-  const yv = planet.a * Math.sqrt(1 - planet.e * planet.e) * Math.sin(E);
-  const v   = Math.atan2(yv, xv) / DEG; // true anomaly in degrees
-  const r   = Math.sqrt(xv * xv + yv * yv); // radius in AU
-
-  // Heliocentric ecliptic longitude
-  const lon = norm360(v + planet.omega);
-
-  return { lon, r, L: norm360(L) };
+function eccentricAnomaly(M, e) {
+  let E = e < 0.8 ? M : Math.PI;
+  for (let i = 0; i < 50; i++) {
+    const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+    E -= dE;
+    if (Math.abs(dE) < 1e-12) break;
+  }
+  return E;
 }
 
 /**
- * Converts heliocentric ecliptic coords to geocentric equatorial RA/Dec.
+ * Heliocentric ecliptic J2000 position (au) of a body on an ellipse.
+ * Angles in degrees: I inclination, node ascending node, w argument of
+ * perihelion, M mean anomaly.
+ */
+function orbitPosition(a, e, I, node, w, M) {
+  const E = eccentricAnomaly((norm360(M + 180) - 180) * DEG, e);
+  // Position in the orbital plane, x towards perihelion
+  const xp = a * (Math.cos(E) - e);
+  const yp = a * Math.sqrt(1 - e * e) * Math.sin(E);
+  // Rotate by w, then I, then node
+  const cw = Math.cos(w * DEG), sw = Math.sin(w * DEG);
+  const cN = Math.cos(node * DEG), sN = Math.sin(node * DEG);
+  const cI = Math.cos(I * DEG), sI = Math.sin(I * DEG);
+  return {
+    x: (cw * cN - sw * sN * cI) * xp + (-sw * cN - cw * sN * cI) * yp,
+    y: (cw * sN + sw * cN * cI) * xp + (-sw * sN + cw * cN * cI) * yp,
+    z: (sw * sI) * xp + (cw * sI) * yp,
+  };
+}
+
+/**
+ * Heliocentric ecliptic J2000 position (au) of a planet or dwarf planet.
+ */
+function heliocentricPosition(body, jd) {
+  if ('M0' in body) {
+    return orbitPosition(body.a, body.e, body.I, body.Omega, body.w, body.M0 + body.n * (jd - DWARF_EPOCH));
+  }
+  const T = (jd - J2000) / 36525;
+  const at = k => body[k][0] + body[k][1] * T;
+  const peri = at('peri');
+  const node = at('node');
+  // Mean anomaly is measured from perihelion: M = L - peri, where
+  // peri = node + argument of perihelion.
+  return orbitPosition(at('a'), at('e'), at('I'), node, peri - node, at('L') - peri);
+}
+
+/** Heliocentric ecliptic longitude (deg), for the orrery. */
+function eclipticLongitude(p) {
+  return norm360(Math.atan2(p.y, p.x) / DEG);
+}
+
+/**
+ * Converts an ecliptic J2000 vector to equatorial J2000 RA/Dec.
  * @returns { ra, dec } in degrees
  */
-function toRaDec(pLon, pLat, pR, eLon, eR) {
-  const eps = 23.439 * DEG; // obliquity of ecliptic (J2000)
-  const pLonR = pLon * DEG;
-  const eLonR = eLon * DEG;
-
-  // Heliocentric rectangular coords
-  const xH = pR * Math.cos(pLonR);
-  const yH = pR * Math.sin(pLonR);
-  const zH = 0;
-
-  // Earth rectangular coords
-  const xE = eR * Math.cos(eLonR);
-  const yE = eR * Math.sin(eLonR);
-
-  // Geocentric rectangular
-  const xG = xH - xE;
-  const yG = yH - yE;
-  const zG = zH;
-
-  // Convert to equatorial
-  const xQ = xG;
-  const yQ = yG * Math.cos(eps) - zG * Math.sin(eps);
-  const zQ = yG * Math.sin(eps) + zG * Math.cos(eps);
-
-  const ra  = norm360(Math.atan2(yQ, xQ) / DEG);
-  const dec = Math.atan2(zQ, Math.sqrt(xQ * xQ + yQ * yQ)) / DEG;
-
-  return { ra, dec };
+function eclipticToRaDec(x, y, z) {
+  const ce = Math.cos(OBLIQUITY_J2000), se = Math.sin(OBLIQUITY_J2000);
+  const yq = y * ce - z * se;
+  const zq = y * se + z * ce;
+  return {
+    ra: norm360(Math.atan2(yq, x) / DEG),
+    dec: Math.atan2(zq, Math.hypot(x, yq)) / DEG,
+  };
 }
 
 /**
- * Converts Right Ascension/Declination to local Altitude and Azimuth.
+ * Geocentric J2000 RA/Dec of a body, seen where it was when its light left
+ * it (light-time), given the Earth's heliocentric position.
+ */
+function geocentricRaDec(body, jd, earth) {
+  let p = heliocentricPosition(body, jd);
+  const dist = Math.hypot(p.x - earth.x, p.y - earth.y, p.z - earth.z);
+  p = heliocentricPosition(body, jd - dist * LIGHT_DAYS_PER_AU);
+  return eclipticToRaDec(p.x - earth.x, p.y - earth.y, p.z - earth.z);
+}
+
+/**
+ * Precesses J2000 RA/Dec to the mean equator and equinox of the date
+ * (IAU 1976 angles, Meeus, Astronomical Algorithms, chapter 21).
+ */
+function precessFromJ2000(ra, dec, jd) {
+  const T = (jd - J2000) / 36525;
+  const zeta  = (2306.2181 * T + 0.30188 * T * T + 0.017998 * T * T * T) / 3600 * DEG;
+  const z     = (2306.2181 * T + 1.09468 * T * T + 0.018203 * T * T * T) / 3600 * DEG;
+  const theta = (2004.3109 * T - 0.42665 * T * T - 0.041833 * T * T * T) / 3600 * DEG;
+  const a = ra * DEG + zeta, d = dec * DEG;
+  const A = Math.cos(d) * Math.sin(a);
+  const B = Math.cos(theta) * Math.cos(d) * Math.cos(a) - Math.sin(theta) * Math.sin(d);
+  const C = Math.sin(theta) * Math.cos(d) * Math.cos(a) + Math.cos(theta) * Math.sin(d);
+  return {
+    ra: norm360((Math.atan2(A, B) + z) / DEG),
+    dec: Math.asin(Math.max(-1, Math.min(1, C))) / DEG,
+  };
+}
+
+/**
+ * Converts Right Ascension/Declination (of the date) to local Altitude and Azimuth.
  * @param {number} ra - RA in degrees
  * @param {number} dec - Dec in degrees
  * @param {number} lat - Observer latitude in degrees
@@ -149,6 +208,23 @@ function toAltAz(ra, dec, lat, lon, date) {
   return { altitude, azimuth };
 }
 
+/** Altitude (deg) of a J2000 RA/Dec for an observer at a moment. */
+function altitudeOf(radec, lat, lon, date, jd) {
+  const p = precessFromJ2000(radec.ra, radec.dec, jd);
+  return toAltAz(p.ra, p.dec, lat, lon, date).altitude;
+}
+
+/**
+ * Whether a body can be seen: above the horizon, and the Sun at least
+ * 6 degrees below it (the end of civil twilight). Otherwise say why.
+ */
+function visibilityStatus(altitude, sunAltitude) {
+  if (altitude <= 0) return { text: 'Below the horizon', visible: false };
+  if (sunAltitude > 0) return { text: 'Daylight', visible: false };
+  if (sunAltitude > -6) return { text: 'Twilight', visible: false };
+  return { text: 'Visible', visible: true };
+}
+
 /** Format RA as HH h MM m */
 function formatRA(deg) {
   const h   = deg / 15;
@@ -167,8 +243,11 @@ function formatDec(deg) {
 }
 
 // ── Main Computation ─────────────────────────────────────────
-let observerLat = null;
-let observerLon = null;
+let activeTab = 'city';   // 'city' | 'gps'
+let cityLat = null;       // from the selected city
+let cityLon = null;
+let gpsLat = null;        // from the typed coordinates, set on Compute
+let gpsLon = null;
 
 const dateInput = document.getElementById('date-input');
 const timeInput = document.getElementById('time-input');
@@ -184,6 +263,12 @@ function getSelectedDate() {
     return new Date(`${dateInput.value}T${timeInput.value}`);
   }
   return new Date();
+}
+
+/** The observer for the active tab, or null when none is set. */
+function currentObserver() {
+  if (activeTab === 'gps') return gpsLat === null ? null : { lat: gpsLat, lon: gpsLon };
+  return cityLat === null ? null : { lat: cityLat, lon: cityLon };
 }
 
 initDateTime();
@@ -212,92 +297,112 @@ orrerySection.addEventListener('mouseout', (e) => {
   tooltip.classList.remove('visible');
 });
 
+const planetGrid = document.getElementById('planet-grid');
+const dwarfGrid  = document.getElementById('dwarf-grid');
+const dwarfHead  = document.getElementById('dwarf-header');
+const locStatus  = document.getElementById('loc-status');
+const LOC_PROMPT = locStatus.textContent;
+
+/** One result row: name, coordinate lines, status pill. dim is for the dwarf planets. */
+function makeRow(name, color, coords, status, dim) {
+  const row = document.createElement('div');
+  row.className = 'planet-row glass-panel';
+
+  const nameEl = document.createElement('div');
+  nameEl.className = 'p-name';
+  const dot = document.createElement('div');
+  dot.className = 'p-dot';
+  dot.style.background = color;
+  dot.style.boxShadow = `0 0 ${dim ? 4 : 6}px ${color}`;
+  if (dim) dot.style.opacity = '0.8';
+  nameEl.append(dot, name);
+
+  const coordsEl = document.createElement('div');
+  coordsEl.className = 'p-coords';
+  for (const line of coords) {
+    const span = document.createElement('span');
+    span.textContent = line.text;
+    if (line.accent) span.className = 'p-alt';
+    coordsEl.appendChild(span);
+  }
+
+  const statusEl = document.createElement('span');
+  statusEl.className = `p-status ${status.visible ? 'p-visible' : 'p-hidden'}`;
+  statusEl.textContent = status.text;
+
+  row.append(nameEl, coordsEl, statusEl);
+  return row;
+}
+
+/** Hide every result, so an earlier answer cannot be read as the new one. */
+function hideResults() {
+  planetGrid.hidden = true;
+  dwarfGrid.hidden = true;
+  dwarfHead.hidden = true;
+  locStatus.textContent = LOC_PROMPT;
+}
+
 /**
  * Runs the full orbital calculation pipeline and updates the DOM.
  */
 function compute() {
   const now = getSelectedDate();
   const jd  = julianDate(now);
+  const observer = currentObserver();
+  const year = now.getFullYear();
 
-  // Earth's heliocentric position first
+  // Earth's heliocentric position first; the Sun is seen from the opposite side
   const earth = heliocentricPosition(PLANETS.Earth, jd);
+  let sunAlt = null;
+  if (observer) {
+    const sun = eclipticToRaDec(-earth.x, -earth.y, -earth.z);
+    sunAlt = altitudeOf(sun, observer.lat, observer.lon, now, jd);
+    const where = sunAlt >= 0 ? 'above' : 'below';
+    locStatus.textContent = `The Sun is ${Math.abs(sunAlt).toFixed(1)}° ${where} the horizon. Planets count as visible once it is 6° below.`;
+  } else {
+    locStatus.textContent = LOC_PROMPT;
+  }
 
-  // Compute position for each planet and render
-  const grid = document.getElementById('planet-grid');
-  grid.innerHTML = ''; // clear before redraw
+  function describe(body) {
+    const gc = geocentricRaDec(body, jd, earth);
+    const coords = [{ text: formatRA(gc.ra) }, { text: formatDec(gc.dec) }];
+    if (!observer) return { coords, status: { text: 'No location', visible: false } };
+    const altitude = altitudeOf(gc, observer.lat, observer.lon, now, jd);
+    coords.push({ text: `Alt ${altitude.toFixed(1)}°`, accent: true });
+    return { coords, status: visibilityStatus(altitude, sunAlt) };
+  }
 
+  planetGrid.innerHTML = ''; // clear before redraw
   Object.entries(PLANETS).forEach(([name, data]) => {
-    if (name === 'Earth') return; // skip Earth itself
-
-    const p   = heliocentricPosition(data, jd);
-    const gc  = toRaDec(p.lon, 0, p.r, earth.lon, earth.r);
-
-    // Compute altitude if we have observer location
-    let altitudeText = '–';
-    let visible = false;
-    if (observerLat !== null && observerLon !== null) {
-      const { altitude } = toAltAz(gc.ra, gc.dec, observerLat, observerLon, now);
-      altitudeText = altitude.toFixed(1) + '°';
-      visible = altitude > 5; // above 5deg eliminates atmospheric distortion
-    }
-
-    // Build the orbit angle on the 2D orrery (CSS transform)
+    // Rotate the orbit container so the planet element (at 100% left) sits at
+    // its heliocentric longitude, counter-clockwise as seen from above the
+    // Sun's north pole, with the March equinox direction to the right.
     const orbitEl = document.getElementById(`orbit-${name.toLowerCase()}`);
     if (orbitEl) {
-      // Rotate the orbit container so the planet element (at 100% left) ends up at the correct heliocentric longitude
-      orbitEl.style.transform = `rotate(${p.lon}deg)`;
+      orbitEl.style.transform = `rotate(${-eclipticLongitude(heliocentricPosition(data, jd))}deg)`;
     }
+    if (name === 'Earth') return; // no row for Earth itself
 
-    // Render planet info card row
-    const row = document.createElement('div');
-    row.className = 'planet-row glass-panel';
-    row.innerHTML = `
-      <div class="p-name">
-        <div class="p-dot" style="background:${data.color};box-shadow:0 0 6px ${data.color};"></div>
-        ${name}
-      </div>
-      <div class="p-coords">
-        <span>${formatRA(gc.ra)}</span>
-        <span>${formatDec(gc.dec)}</span>
-        ${observerLat !== null ? `<span style="color: var(--accent-light);">Alt ${altitudeText}</span>` : ''}
-      </div>
-      <span class="p-status ${visible ? 'p-visible' : 'p-hidden'}">${observerLat !== null ? (visible ? 'Visible' : 'Below horizon') : 'No location'}</span>
-    `;
-    grid.appendChild(row);
+    const { coords, status } = describe(data);
+    planetGrid.appendChild(makeRow(name, data.color, coords, status));
   });
 
   // ── Dwarf Planets ─────────────────────────────────────────
-  const dwarfGrid = document.getElementById('dwarf-grid');
   dwarfGrid.innerHTML = '';
-
   Object.entries(DWARF_PLANETS).forEach(([name, data]) => {
-    const p  = heliocentricPosition(data, jd);
-    const gc = toRaDec(p.lon, 0, p.r, earth.lon, earth.r);
-
-    let altitudeText = '–';
-    let visible = false;
-    if (observerLat !== null && observerLon !== null) {
-      const { altitude } = toAltAz(gc.ra, gc.dec, observerLat, observerLon, now);
-      altitudeText = altitude.toFixed(1) + '°';
-      visible = altitude > 5;
+    const [from, to] = data.years;
+    if (year < from || year > to) {
+      dwarfGrid.appendChild(makeRow(name, data.color,
+        [{ text: `Shown for ${from} to ${to} only` }], { text: 'Out of range', visible: false }, true));
+      return;
     }
-
-    const row = document.createElement('div');
-    row.className = 'planet-row glass-panel';
-    row.innerHTML = `
-      <div class="p-name">
-        <div class="p-dot" style="background:${data.color};box-shadow:0 0 4px ${data.color};opacity:0.8;"></div>
-        ${name}
-      </div>
-      <div class="p-coords">
-        <span>${formatRA(gc.ra)}</span>
-        <span>${formatDec(gc.dec)}</span>
-        ${observerLat !== null ? `<span style="color: var(--accent-light);">Alt ${altitudeText}</span>` : ''}
-      </div>
-      <span class="p-status ${visible ? 'p-visible' : 'p-hidden'}">${observerLat !== null ? (visible ? 'Visible' : 'Below horizon') : 'No location'}</span>
-    `;
-    dwarfGrid.appendChild(row);
+    const { coords, status } = describe(data);
+    dwarfGrid.appendChild(makeRow(name, data.color, coords, status, true));
   });
+
+  planetGrid.hidden = false;
+  dwarfGrid.hidden = false;
+  dwarfHead.hidden = false;
 }
 
 // ── Tab Switcher ──────────────────────────────────────────────
@@ -309,6 +414,7 @@ document.querySelectorAll('.tab').forEach(btn => {
     // Activate clicked tab and matching panel
     btn.classList.add('active');
     btn.setAttribute('aria-selected', 'true');
+    activeTab = btn.dataset.tab;
     const panel = document.getElementById('panel-' + btn.dataset.tab);
     if (panel) { panel.hidden = false; panel.classList.add('active'); }
   });
@@ -345,8 +451,8 @@ citySearchInput.addEventListener('input', () => {
     li.role = 'option';
     li.innerHTML = `<span class="city-name">${c.name}</span><span class="city-country">${c.country}</span>`;
     li.addEventListener('click', () => {
-      observerLat = c.lat;
-      observerLon = c.lon;
+      cityLat = c.lat;
+      cityLon = c.lon;
       citySelectedText.textContent = `${c.name}, ${c.country}`;
       citySelectedDiv.hidden = false;
       cityDropdown.hidden = true;
@@ -364,63 +470,87 @@ document.addEventListener('click', e => {
 });
 
 cityClearBtn.addEventListener('click', () => {
-  observerLat = null; observerLon = null;
+  cityLat = null; cityLon = null;
   citySelectedDiv.hidden = true;
   citySearchInput.value = '';
   // Wait for user to press compute manually
 });
 
-// ── GPS Coordinates ───────────────────────────────────────────
+// ── Typed Coordinates ─────────────────────────────────────────
 const latInput = document.getElementById('lat-input');
 const lonInput = document.getElementById('lon-input');
+const latError = document.getElementById('lat-error');
+const lonError = document.getElementById('lon-error');
+const gpsEcho  = document.getElementById('gps-echo');
 
-function tryApplyGPS() {
-  const lat = parseFloat(latInput.value);
-  const lon = parseFloat(lonInput.value);
-  if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
-    observerLat = lat;
-    observerLon = lon;
-    // Wait for user to press compute manually
+// Shared Labs parser: accepts "60,39" and a Unicode minus, rejects anything else or out of range (null).
+function parseDecimal(text, min, max) {
+  if (text == null) return null;
+  let s = String(text).trim().replace(/[\u2212\u2012\u2013\u2014\uFE63\uFF0D]/g, '-').replace(/\s+/g, '');
+  if (/^[+-]?\d+,\d+$/.test(s)) s = s.replace(',', '.');
+  if (!/^[+-]?(\d+\.?\d*|\.\d+)$/.test(s)) return null;
+  const n = Number(s);
+  return Number.isFinite(n) && n >= min && n <= max ? n : null;
+}
+
+/** Show (msg) or clear (null) the inline message under one coordinate field. */
+function setFieldError(input, errorEl, msg) {
+  if (msg) {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+    input.setAttribute('aria-invalid', 'true');
+  } else {
+    errorEl.textContent = '';
+    errorEl.hidden = true;
+    input.removeAttribute('aria-invalid');
   }
 }
-latInput.addEventListener('change', tryApplyGPS);
-lonInput.addEventListener('change', tryApplyGPS);
 
-// ── Device Geolocation ────────────────────────────────────────
-const getLocBtn    = document.getElementById('get-location-btn');
-const deviceCoords = document.getElementById('device-coords');
-const errorMsg     = document.getElementById('error-msg');
+/** Show (text) or clear (null) the "Using ..." line. Cleared text, not just
+ *  hidden: aria-describedby still reads a hidden element it points at. */
+function setEcho(text) {
+  gpsEcho.textContent = text || '';
+  gpsEcho.hidden = !text;
+}
 
-getLocBtn.addEventListener('click', () => {
-  if (!navigator.geolocation) {
-    errorMsg.textContent = 'Geolocation not supported by this browser.';
-    errorMsg.hidden = false; return;
-  }
-  getLocBtn.textContent = 'Locating…';
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      observerLat = pos.coords.latitude;
-      observerLon = pos.coords.longitude;
-      deviceCoords.textContent = `${observerLat.toFixed(4)}°, ${observerLon.toFixed(4)}°`;
-      deviceCoords.hidden = false;
-      getLocBtn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" style="width:18px;height:18px"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg> Location Set`;
-      errorMsg.hidden = true;
-      // Wait for user to press compute manually
-    },
-    () => {
-      errorMsg.textContent = 'Location access denied.';
-      errorMsg.hidden = false;
-      getLocBtn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" style="width:18px;height:18px"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg> Get My Location`;
+// Editing a coordinate clears its error and the "Using ..." line, which
+// described the previous value, until the next Compute.
+latInput.addEventListener('input', () => { setFieldError(latInput, latError, null); setEcho(null); });
+lonInput.addEventListener('input', () => { setFieldError(lonInput, lonError, null); setEcho(null); });
+
+/** Compute button: read the typed coordinates when that tab is active. */
+function onCompute() {
+  if (activeTab === 'gps') {
+    const lat = parseDecimal(latInput.value, -90, 90);
+    const lon = parseDecimal(lonInput.value, -180, 180);
+
+    setFieldError(latInput, latError,
+      lat === null ? 'Enter a latitude between -90 and 90, such as 60.39 or 60,39.' : null);
+    setFieldError(lonInput, lonError,
+      lon === null ? 'Enter a longitude between -180 and 180, such as 5.32 or 5,32.' : null);
+
+    if (lat === null || lon === null) {
+      // Do not compute, and do not leave an older result showing under the error.
+      gpsLat = null; gpsLon = null;
+      setEcho(null);
+      hideResults();
+      (lat === null ? latInput : lonInput).focus();
+      return;
     }
-  );
-});
+
+    gpsLat = lat;
+    gpsLon = lon;
+    // Echo the numbers actually used, so "6,5" visibly became 6.5.
+    setEcho(`Using ${lat}, ${lon}`);
+  }
+  compute();
+}
 
 // ── Compute Button Event Listener ────────────────────────────
 const btnCompute = document.getElementById('btn-compute');
 if (btnCompute) {
-  btnCompute.addEventListener('click', compute);
+  btnCompute.addEventListener('click', onCompute);
 }
 
 // ── Initial render ───────────────────────────────────────────
 compute();
-

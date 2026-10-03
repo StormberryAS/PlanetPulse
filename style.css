@@ -18,6 +18,10 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* The hidden attribute must win over the display rules below (.planet-grid,
+   .selected-city), or hidden results and the empty city box still show. */
+[hidden] { display: none !important; }
+
 body {
   font-family: var(--font-sans); background-color: var(--bg-color);
   color: var(--text-primary); line-height: 1.6; min-height: 100vh;
@@ -94,15 +98,23 @@ body {
 .timeline-header p { color: var(--text-secondary); font-size: 0.9rem; }
 
 .planet-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-sm); }
-.planet-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.planet-row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
 .planet-row:last-child { border-bottom: none; }
 .p-name { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 1.1rem; }
 .p-dot { width: 10px; height: 10px; border-radius: 50%; }
-.p-status { font-size: 0.85rem; padding: 0.2rem 0.6rem; border-radius: 99px; font-weight: 600; }
+.p-status { font-size: 0.85rem; padding: 0.2rem 0.6rem; border-radius: 99px; font-weight: 600; white-space: nowrap; }
 .p-visible { background: rgba(76, 175, 80, 0.15); color: #81C784; }
 .p-hidden { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
 .p-coords { display: flex; flex-direction: column; text-align: right; font-size: 0.85rem; color: var(--text-secondary); font-family: monospace; }
-.p-coords span { line-height: 1.2; }
+.p-coords span { line-height: 1.2; white-space: nowrap; }
+.p-coords .p-alt { color: var(--accent-light); }
+/* Phones: "Below the horizon" and a full Dec line must each stay on one line */
+@media (max-width: 420px) {
+  .planet-row { padding: 0.85rem 0.75rem; }
+  .p-name { font-size: 1rem; }
+  .p-coords { font-size: 0.78rem; }
+  .p-status { font-size: 0.75rem; padding: 0.2rem 0.5rem; }
+}
 
 /* Button */
 .btn { width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 1rem 1.5rem; border-radius: var(--r-sm); outline: none; border: none; font-weight: 600; font-size: 1rem; font-family: var(--font-sans); cursor: pointer; transition: all 0.2s ease; }
@@ -216,8 +228,12 @@ label {
   border-color: var(--accent-purple);
   box-shadow: 0 0 0 3px rgba(157,78,221,0.15);
 }
-.text-input[type="number"]::-webkit-inner-spin-button,
-.text-input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+/* Inline message under a coordinate field when it cannot be read */
+.field-error { color: #FF5A5A; font-size: 0.8rem; line-height: 1.4; margin-top: 4px; }
+.text-input[aria-invalid="true"] { border-color: rgba(255, 90, 90, 0.6); }
+
+/* Echo of the coordinates actually used, e.g. "Using 60.39, 5.32" */
+.field-note { color: var(--text-secondary); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
 
 .search-wrapper { position: relative; }
 .search-icon {
@@ -257,16 +273,6 @@ label {
 
 .city-missing-note { font-size: 0.75rem; color: var(--text-secondary); opacity: 0.7; margin-top: 4px; text-align: right; }
 .city-missing-note a { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
-
-.device-panel { display: flex; flex-direction: column; align-items: center; gap: var(--sp-md); padding: var(--sp-md) 0; }
-.device-hint { color: var(--text-secondary); font-size: 0.88rem; text-align: center; }
-.device-coords { font-family: monospace; font-size: 0.85rem; color: var(--accent-light); text-align: center; background: rgba(157,78,221,0.08); border: 1px solid rgba(157,78,221,0.2); border-radius: var(--r-sm); padding: var(--sp-sm) var(--sp-md); width: 100%; margin-top: var(--sp-sm); }
-
-.btn-secondary { background: rgba(255,255,255,0.07); border: 1px solid var(--border); color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; justify-content: center; padding: 0.75rem 1.25rem; border-radius: var(--r-sm); font-family: var(--font-sans); font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; }
-.btn-secondary:hover { background: rgba(255,255,255,0.12); }
-.btn-secondary svg { width: 18px; height: 18px; }
-
-.error-msg { color: #FF5A5A; font-size: 0.85rem; text-align: center; padding-top: var(--sp-sm); }
 
 .fade-in { animation: fadeIn 0.5s ease-out forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
