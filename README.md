@@ -5,7 +5,7 @@ Sovereign, offline-first planetary tracker. PlanetPulse computes where the seven
 **Live:** [planet.stormberry.as](https://planet.stormberry.as)
 
 ## Features
-- **Keplerian orbital engine**: a pure-JavaScript solver using the JPL Keplerian elements of Standish and Williams (Table 1, mean ecliptic and equinox of J2000, with their rates per century). Each orbit is solved for the eccentric anomaly and rotated in three dimensions by its argument of perihelion, inclination and ascending node, then seen from the Earth (allowing for light-time) as right ascension and declination, which are precessed to the date for the local altitude.
+- **Keplerian orbital engine**: a self-contained TypeScript solver, compiled to the JavaScript the browser runs, using the JPL Keplerian elements of Standish and Williams (Table 1, mean ecliptic and equinox of J2000, with their rates per century). Each orbit is solved for the eccentric anomaly and rotated in three dimensions by its argument of perihelion, inclination and ascending node, then seen from the Earth (allowing for light-time) as right ascension and declination, which are precessed to the date for the local altitude.
 - **Interactive 2D orrery**: a top-down map of Mercury to Saturn on their orbit rings, seen from above the Sun's north pole, so the planets go round anticlockwise. Hover any planet dot to reveal its name.
 - **Night-sky visibility**: set the place by city search or by typed coordinates, then see which planets are up. A decimal comma works as well as a point (`60,39` or `60.39`), and so does a typographic minus; anything out of range is refused with a message rather than computed. "Visible" means above the horizon with the Sun at least 6 degrees below it; otherwise the row says why ("Below the horizon", "Daylight" or "Twilight").
 - **Planets and dwarf planets**: Mercury, Venus, Mars, Jupiter, Saturn, Uranus and Neptune, plus Ceres, Pluto, Haumea, Makemake and Eris listed separately from JPL Horizons osculating elements (epoch 1 January 2028). A fixed ellipse drifts as the planets pull on it, so Ceres is shown for 2017 to 2036 and the others for 1950 to 2099, the years in which each stays within 1 degree of Horizons.
@@ -31,7 +31,10 @@ Measured on 2 October 2026. Largest angle between PlanetPulse and the reference 
 Altitudes for Bergen and Sydney agree with PyEphem to within 0.09°. Over the whole 1800 to 2050 span of the source table, Jupiter stays within 0.18° and Saturn within 0.23°. Altitudes are geometric: atmospheric refraction, which lifts a body near the horizon by about half a degree, is not applied.
 
 ## Architecture
-- **Vanilla HTML/CSS/JS**, no frameworks, no build step, no runtime dependencies.
+- **Vanilla HTML and CSS, TypeScript**, no frameworks, no runtime dependencies.
+- **TypeScript source in `ts/`, compiled JavaScript committed.** `ts/app.ts` compiles to `app.js`, at the same path the page has always loaded, as a classic script (no modules). The compiled file is committed because GitHub Pages serves the repository as it is, with no build step of its own; `.gitattributes` marks it as generated. Edit the TypeScript, never the `.js`.
+- **Generated file kept as it is.** `cities.js` is the shared Stormberry Labs city catalogue, written by SunApp's `update_cities.py`; `ts/cities.d.ts` types it for the TypeScript. It is not edited here.
+- **Build:** `npm run build` (`tools/build-ts.sh`) installs the pinned compiler (`npm ci`), compiles, then runs `bump_assets.py` to restamp the `?v=` cache stamps. `npm run check` changes nothing and fails when the committed JavaScript is not what the TypeScript compiles to. `npm test` runs the tests in `tests/` with the test runner built into Node 24.
 - **Privacy first**, zero external API calls, zero tracking, zero cookies, fully offline-capable once loaded. The page never asks for the device's location: a place comes from city search or from typed coordinates.
 - Stormberry dark-mode glassmorphism design system, Inter typography.
 - **Sovereign AI**, built and maintained using high-speed agentic workflows.
