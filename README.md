@@ -1,6 +1,6 @@
 # PlanetPulse
 
-Sovereign, offline-first planetary tracker. PlanetPulse computes where the seven other planets and five dwarf planets are in the sky, and whether you can see them, entirely inside the browser, with zero external API calls.
+Sovereign planetary tracker. PlanetPulse computes where the seven other planets and five dwarf planets are in the sky, and whether you can see them, entirely inside the browser, with zero external API calls.
 
 **Live:** [planet.stormberry.as](https://planet.stormberry.as)
 
@@ -35,7 +35,7 @@ Altitudes for Bergen and Sydney agree with PyEphem to within 0.09°. Over the wh
 - **TypeScript source in `ts/`, compiled JavaScript committed.** `ts/app.ts` compiles to `app.js`, at the same path the page has always loaded, as a classic script (no modules). The compiled file is committed because GitHub Pages serves the repository as it is, with no build step of its own; `.gitattributes` marks it as generated. Edit the TypeScript, never the `.js`.
 - **Generated file kept as it is.** `cities.js` is the shared Stormberry Labs city catalogue, written by SunApp's `update_cities.py`; `ts/cities.d.ts` types it for the TypeScript. It is not edited here.
 - **Build:** `npm run build` (`tools/build-ts.sh`) installs the pinned compiler (`npm ci`), compiles, then runs `bump_assets.py` to restamp the `?v=` cache stamps. `npm run check` changes nothing and fails when the committed JavaScript is not what the TypeScript compiles to. `npm test` runs the tests in `tests/` with the test runner built into Node 24.
-- **Privacy first**, zero external API calls, zero tracking, zero cookies, fully offline-capable once loaded. The page never asks for the device's location: a place comes from city search or from typed coordinates.
+- **Privacy first**, zero external API calls, zero tracking, zero cookies. The page needs the network to load; once it has loaded it makes no further request. The page never asks for the device's location: a place comes from city search or from typed coordinates.
 - Stormberry dark-mode glassmorphism design system, Inter typography.
 - **Sovereign AI**, built and maintained using high-speed agentic workflows.
 

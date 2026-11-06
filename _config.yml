@@ -26,6 +26,12 @@
 # no served file links to it or loads it. The launch screenshot 20260507planetpulse.png was removed from
 # the repository the same day: no served file, README or document used it, and the Website's launch post
 # shows its own WebP copy (pictures/20260507planetpulse.webp on stormberry.as).
+#
+# GitHub Pages builds with its default theme (jekyll-theme-primer) unless this file names
+# none, and that theme adds /assets/css/style.css: a stylesheet no page links, in fonts that
+# are not Inter. theme: null turns the theme off (6 November 2026). Tested with the Pages
+# build image (github-pages 232): the only change to the site is that this stylesheet is gone.
+theme: null
 exclude:
   - DISCLAIMER.md
   - description.txt

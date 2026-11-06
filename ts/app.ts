@@ -4,7 +4,7 @@
 
 /**
  * PlanetPulse: where the planets are, computed in the browser
- * Stormberry AS | Sovereign, offline-first planetary tracker
+ * Stormberry AS | Sovereign planetary tracker
  *
  * Planets: Keplerian elements and their rates per century from
  * E. M. Standish and J. G. Williams (JPL), "Keplerian Elements for
