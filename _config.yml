@@ -21,8 +21,14 @@
 # package files and .npmrc, and node_modules/, where npm ci puts TypeScript, are excluded.
 # (.npmrc and .gitattributes are dot files, which Jekyll never publishes; .npmrc is listed anyway,
 # as in AstroQuiz and the others.)
+#
+# description.txt stays off the site (6 November 2026): it is the first written plan for the app, and
+# no served file links to it or loads it. The launch screenshot 20260507planetpulse.png was removed from
+# the repository the same day: no served file, README or document used it, and the Website's launch post
+# shows its own WebP copy (pictures/20260507planetpulse.webp on stormberry.as).
 exclude:
   - DISCLAIMER.md
+  - description.txt
   - LICENSE
   - README.md
   - bump_assets.py

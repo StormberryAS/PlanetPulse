@@ -41,6 +41,26 @@ test('load: the year, the date and time of now, every body with no location, the
   assert.deepEqual([s.hidden.planets, s.hidden.dwarfs, s.hidden.dwarfHeader], [false, false, false]);
 });
 
+test('the city rows are built with DOM calls: names are text, never markup', () => {
+  const page = loadPage(root, NOW);
+  // A real catalogue name with an ampersand: the row holds it as text, in two spans, and no markup was set.
+  page.search('choi wan estate');
+  let s = page.state();
+  assert.deepEqual(s.dropdown, [option('Choi Wan Estate (I & II)', 'Hong Kong')]);
+  assert.deepEqual(s.dropdownMarkup, ['']);
+  page.pick(0);
+  assert.equal(page.state().selected, 'Choi Wan Estate (I & II), Hong Kong');
+  // A name that looks like markup stays text. The catalogue is replaced by one such city.
+  page.evaluate(`(Object.defineProperty(globalThis, 'CITIES', { configurable: true, value: [{ name: '<b>Bold</b> &amp; <img src=x>', fold: 'zz', country: '<i>Land</i>', cfold: 'land', lat: 1, lon: 2, tz: 'UTC', alt: '' }] }), null)`);
+  page.search('zz');
+  s = page.state();
+  assert.deepEqual(s.dropdown, [option('<b>Bold</b> &amp; <img src=x>', '<i>Land</i>')]);
+  assert.deepEqual(s.dropdownMarkup, ['']);
+  page.pick(0);
+  s = page.state();
+  assert.deepEqual([s.selected, s.hidden.dropdown, s.hidden.selected], ['<b>Bold</b> &amp; <img src=x>, <i>Land</i>', true, false]);
+});
+
 test('the city search: prefix matches first, ten at most; a pick waits for Compute', () => {
   const page = loadPage(root, NOW);
   page.search('b');

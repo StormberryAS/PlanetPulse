@@ -76,6 +76,8 @@ export interface PageState {
   planets: Row[];
   dwarfs: Row[];
   dropdown: string[];
+  /** The innerHTML of each row: '' for every row, because the rows are built with DOM calls. */
+  dropdownMarkup: string[];
   selected: string;
   search: string;
   latError: string;
@@ -220,7 +222,8 @@ export function loadPage(root: URL, now: number): Page {
       orbits: Object.fromEntries(ORBITS.map((o) => [o, el(`orbit-${o}`).style['transform'] ?? ''])),
       planets: rows(el('planet-grid')),
       dwarfs: rows(el('dwarf-grid')),
-      dropdown: el('city-dropdown').children.map((c) => (typeof c === 'string' ? c : `${c.role}|${c.innerHTML}`)),
+      dropdown: el('city-dropdown').children.map((c) => (typeof c === 'string' ? c : `${c.role}|${c.children.map((k) => (typeof k === 'string' ? k : `<${k.tag} class="${k.className}">${k.textContent}</${k.tag}>`)).join('')}`)),
+      dropdownMarkup: el('city-dropdown').children.map((c) => (typeof c === 'string' ? '' : c.innerHTML)),
       selected: el('city-selected-text').textContent,
       search: input('city-search').value,
       latError: el('lat-error').textContent,

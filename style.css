@@ -110,7 +110,7 @@ body {
 .p-status { font-size: 0.85rem; padding: 0.2rem 0.6rem; border-radius: 99px; font-weight: 600; white-space: nowrap; }
 .p-visible { background: rgba(76, 175, 80, 0.15); color: #81C784; }
 .p-hidden { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
-.p-coords { display: flex; flex-direction: column; text-align: right; font-size: 0.85rem; color: var(--text-secondary); font-family: monospace; }
+.p-coords { display: flex; flex-direction: column; text-align: right; font-size: 0.85rem; color: var(--text-secondary); font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
 .p-coords span { line-height: 1.2; white-space: nowrap; }
 .p-coords .p-alt { color: var(--accent-light); }
 /* Phones: "Below the horizon" and a full Dec line must each stay on one line */
@@ -229,6 +229,7 @@ body {
    own form styles off it. */
 .app-switcher-container input.switcher-pause {
   all: revert;
+  font-family: var(--font-sans);
   margin: 0 0.5rem 0.75rem 0;
   vertical-align: middle;
   accent-color: var(--accent-light);

@@ -531,7 +531,14 @@ citySearchInput.addEventListener('input', () => {
   matches.forEach(c => {
     const li = document.createElement('li');
     li.role = 'option';
-    li.innerHTML = `<span class="city-name">${c.name}</span><span class="city-country">${c.country}</span>`;
+    // Built with DOM calls: the name and the country are text, never markup.
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'city-name';
+    nameSpan.textContent = c.name;
+    const countrySpan = document.createElement('span');
+    countrySpan.className = 'city-country';
+    countrySpan.textContent = c.country;
+    li.append(nameSpan, countrySpan);
     li.addEventListener('click', () => {
       cityLat = c.lat;
       cityLon = c.lon;

@@ -41,3 +41,15 @@ test('the only JavaScript is compiled or generated output, each file marked so',
   assert.deepEqual([...new Set(js)].sort(), [...COMPILED, ...GENERATED_JS].sort());
   for (const f of [...COMPILED, ...GENERATED_JS]) assert.equal(git('check-attr', 'linguist-generated', '--', f).trim(), `${f}: linguist-generated: true`);
 });
+
+test('the font is always Inter: no monospace stack in the pages, the stylesheet or the script', () => {
+  const MONO = /monospace|\bMenlo\b|\bConsolas\b|\bCourier\b|SFMono|Monaco/i;
+  for (const f of ['index.html', 'disclaimer.html', 'style.css', 'ts/app.ts', 'app.js']) {
+    assert.doesNotMatch(readFileSync(`${root}${f}`, 'utf8'), MONO, f);
+  }
+  // The coordinates are numbers that must line up: Inter with tabular figures.
+  assert.match(readFileSync(`${root}style.css`, 'utf8'), /\.p-coords \{[^}]*font-family: var\(--font-sans\); font-variant-numeric: tabular-nums;/);
+  assert.match(readFileSync(`${root}style.css`, 'utf8'), /--font-sans: 'InterVariable', 'Inter',/);
+  // `all: revert` on the pause tick box would give it the browser's own control font (Arial); it names Inter again.
+  assert.match(readFileSync(`${root}style.css`, 'utf8'), /input\.switcher-pause \{\n  all: revert;\n  font-family: var\(--font-sans\);/);
+});
